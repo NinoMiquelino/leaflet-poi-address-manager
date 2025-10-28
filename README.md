@@ -10,7 +10,7 @@
 
 ---
 
-#📍 Gerenciador de Pontos de Interesse (POI) com Geolocalização
+# 📍 Gerenciador de Pontos de Interesse (POI) com Geolocalização
 
 ![JavaScript](https://img.shields.io/badge/Frontend-JavaScript-F7DF1E?logo=javascript&logoColor=black)
 ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-38B2AC?logo=tailwindcss&logoColor=white)
@@ -27,7 +27,7 @@ O grande destaque é a integração com a Geocodificação Reversa (Nominatim), 
 
 ---
 
-✨ Destaques do Projeto
+## ✨ Destaques do Projeto
  * Geocodificação Reversa (Nominatim): Converte coordenadas de Lat/Lng em endereços completos e formatados, exibindo-os tanto na localização do usuário quanto nos POIs salvos.
  * Geolocalização Automática: Utiliza a API nativa do navegador para encontrar e marcar a posição atual do usuário no mapa com um ícone dedicado.
  * Gerenciamento de POI: Permite que o usuário adicione pontos de interesse personalizados com nome, exibindo-os no mapa (com marcadores customizados) e listando-os em uma barra lateral interativa.
