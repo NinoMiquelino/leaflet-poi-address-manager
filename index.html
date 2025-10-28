@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Localizador e POI Manager</title>
+    <meta name="author" content="Onivaldo Miquelino">          
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'user': '#1F75FE', // Azul para o usuário
+                        'poi': '#FFC300',  // Amarelo para POIs
+                        'background': '#f8fafc',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Leaflet CSS e JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha2d-p4NxBMTgddhQ082iN/zH/k9oD7L/L2VnI6pXw5L8V+8"
+        crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha2d-eS9vC7qD0/f/yK3x9zK+5/qgKjP6l8uD9I6V8I2O8w+M"
+        crossorigin=""></script>
+    <style>
+        /* Define a altura do mapa */
+        #map { height: 100%; min-height: 50vh; border-radius: 0.75rem; }
+        .full-page-container { min-height: 100vh; }
+        .leaflet-container { font-family: 'Inter', sans-serif; }
+
+        /* Estilo para ícone de POI personalizado */
+        .poi-icon {
+            background-color: #FFC300;
+            color: #333;
+            border: 3px solid white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            text-align: center;
+            line-height: 24px;
+            font-weight: bold;
+            font-size: 14px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+        /* Estilo para ícone de localização do usuário */
+        .user-icon {
+            background-color: #1F75FE;
+            color: white;
+            border: 4px solid #fff;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            text-align: center;
+            line-height: 27px;
+            font-size: 16px;
+            box-shadow: 0 0 10px rgba(31, 117, 254, 0.8);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 full-page-container flex items-start justify-center p-4">
+
+    <!-- Container Principal Responsivo -->
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl p-4 sm:p-6 my-4">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2 text-center"> Localizador e POI Manager</h1>
+        <p class="text-center text-gray-600 mb-6">Encontre sua posição e adicione Pontos de Interesse (POIs) com endereço completo.</p>
+
+        <!-- Container do Mapa e da Lista -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Área do Mapa -->
+            <div id="map" class="lg:col-span-2 shadow-inner order-1">
+                <!-- O mapa será injetado aqui pelo Leaflet -->
+            </div>
+
+            <!-- Painel de POIs e Status -->
+            <div id="sidebar" class="lg:col-span-1 bg-gray-50 p-4 rounded-lg shadow-md order-2">
+                <h2 class="text-xl font-semibold text-gray-700 mb-3 border-b pb-2 flex justify-between items-center">
+                    Meus POIs Cadastrados
+                    <span id="poiCount" class="bg-poi text-white text-xs font-bold px-2 py-1 rounded-full">0</span>
+                </h2>
+                
+                <!-- Status da Geolocalização do Usuário -->
+                <div id="userStatus" class="p-3 mb-4 rounded-lg bg-blue-100 border border-user/50 text-user">
+                    <p class="font-bold flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        Localização:
+                    </p>
+                    <p id="userAddress" class="text-sm mt-1 text-gray-700">Buscando sua posição e endereço...</p>
+                    <p id="userCoords" class="text-xs text-gray-500 mt-1"></p>
+                </div>
+
+                <!-- Lista de POIs (Vazia inicialmente) -->
+                <ul id="poiList" class="space-y-2 max-h-64 overflow-y-auto">
+                    <li id="emptyState" class="text-center text-gray-500 italic p-4 bg-white rounded-md">
+                        Nenhum POI adicionado. Clique no mapa para começar!
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let map;
+        let poiData = []; // Array para armazenar os dados dos POIs
+        let userMarker = null; // Marcador para a localização do usuário
+
+        // Ícones personalizados
+        const POI_ICON = L.divIcon({ className: 'poi-icon', html: 'P', iconSize: [30, 30], iconAnchor: [15, 30] });
+        const USER_ICON = L.divIcon({ className: 'user-icon', html: '', iconSize: [35, 35], iconAnchor: [17, 35] });
+
+        // --- 1. Inicialização do Mapa e Geolocalização ---
+        function initMap() {
+            // Inicializa o mapa com um centro padrão (mundo) e um nível de zoom baixo
+            map = L.map('map').setView([0, 0], 2); 
+
+            // Adiciona a camada do OpenStreetMap
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Adiciona o listener de clique para adicionar POIs
+            map.on('click', handleMapClick);
+
+            // Tenta localizar o usuário
+            locateUser();
+        }
+
+        /**
+         * Realiza geocodificação reversa para obter o endereço a partir das coordenadas (Nominatim).
+         * @param {number} lat - Latitude.
+         * @param {number} lng - Longitude.
+         * @returns {Promise<string>} O endereço formatado ou uma mensagem de erro.
+         */
+        async function reverseGeocode(lat, lng) {
+            const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`;
+            
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        // É uma boa prática definir um User-Agent para a API Nominatim
+                        'User-Agent': 'POI-Manager-App/1.0 (onivaldo.miquelino@example.com)'
+                    }
+                });
+                const data = await response.json();
+                
+                if (data.display_name) {
+                    return data.display_name;
+                } else {
+                    return "Endereço não encontrado.";
+                }
+
+            } catch (error) {
+                console.error("Erro na geocodificação reversa:", error);
+                return "Erro ao buscar endereço.";
+            }
+        }
+
+        // --- 2. Localização do Usuário (Geolocation API) ---
+        function locateUser() {
+            const userCoordsElement = document.getElementById('userCoords');
+            const userAddressElement = document.getElementById('userAddress');
+            const userStatusElement = document.getElementById('userStatus');
+
+            if (!navigator.geolocation) {
+                userAddressElement.textContent = 'Geolocalização não é suportada pelo seu navegador.';
+                userStatusElement.classList.replace('bg-blue-100', 'bg-red-100');
+                userStatusElement.classList.replace('text-user', 'text-red-600');
+                return;
+            }
+
+            // Inicia o processo de localização
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    const latlng = [lat, lng];
+
+                    // Busca o endereço de forma assíncrona
+                    userAddressElement.textContent = 'Endereço: Buscando...';
+                    const address = await reverseGeocode(lat, lng);
+
+                    // Centraliza o mapa na posição do usuário com zoom 13
+                    map.setView(latlng, 13);
+                    
+                    // Adiciona/Atualiza o marcador do usuário
+                    if (!userMarker) {
+                        userMarker = L.marker(latlng, { icon: USER_ICON, draggable: false })
+                                        .addTo(map)
+                                        .bindPopup(`<b>Sua Posição Atual</b><br>${address}`)
+                                        .openPopup();
+                    } else {
+                        userMarker.setLatLng(latlng);
+                        userMarker.setPopupContent(`<b>Sua Posição Atual</b><br>${address}`).openPopup();
+                    }
+
+                    // Atualiza o status na interface
+                    userAddressElement.textContent = `Endereço: ${address}`;
+                    userCoordsElement.textContent = `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`;
+                    userStatusElement.classList.replace('bg-blue-100', 'bg-green-100');
+                    userStatusElement.classList.replace('text-user', 'text-green-600');
+                },
+                (error) => {
+                    // Trata erros de localização
+                    let errorMsg = 'Falha ao obter localização.';
+                    if (error.code === 1) {
+                         errorMsg = 'Acesso à localização negado pelo usuário.';
+                    }
+                    userAddressElement.textContent = `Endereço: ${errorMsg}`;
+                    userCoordsElement.textContent = '';
+                    userStatusElement.classList.replace('bg-blue-100', 'bg-red-100');
+                    userStatusElement.classList.replace('text-user', 'text-red-600');
+                    // Define uma visualização global caso não encontre o usuário
+                    map.setView([-14.235, -51.925], 4);
+                },
+                { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 } // Opções de Geolocalização
+            );
+        }
+
+
+        // --- 3. Manipulador de Clique no Mapa (Adicionar POI) ---
+        async function handleMapClick(e) {
+            const poiName = prompt("Qual o nome deste Ponto de Interesse (POI)?");
+
+            if (poiName && poiName.trim() !== "") {
+                const lat = e.latlng.lat;
+                const lng = e.latlng.lng;
+                
+                // Exibe feedback de busca
+                const tempAddress = 'Buscando endereço...';
+
+                // Adiciona o POI ao mapa
+                addPOIMarker(poiName.trim(), e.latlng, tempAddress);
+                
+                // Busca o endereço de forma assíncrona
+                const address = await reverseGeocode(lat, lng);
+                
+                // Atualiza o popup do marcador
+                // (Assumindo que o último marcador adicionado é o que precisamos atualizar)
+                const markers = map._layers;
+                let lastMarker = null;
+                for (const i in markers) {
+                    if (markers[i] instanceof L.Marker) {
+                        lastMarker = markers[i];
+                    }
+                }
+                if (lastMarker) {
+                     lastMarker.setPopupContent(`<b>POI: ${poiName.trim()}</b><br>${address}`).openPopup();
+                }
+
+                // Adiciona o POI à lista de dados
+                poiData.push({ 
+                    name: poiName.trim(), 
+                    lat: lat.toFixed(4), 
+                    lng: lng.toFixed(4),
+                    address: address // Armazena o endereço completo
+                });
+
+                // Atualiza a lista na interface
+                updatePOIList();
+
+            } else if (poiName !== null) {
+                // Se o usuário clicou em OK mas deixou em branco
+                // Substituído por modal/mensagem em produção, mas usando alert aqui por simplicidade
+                // alert("O nome do POI não pode ser vazio."); 
+            }
+        }
+
+        // --- 4. Adicionar Marcador de POI no Mapa ---
+        function addPOIMarker(name, latlng, address) {
+            // Cria um ícone customizado com o primeiro caractere do nome
+            const customIcon = L.divIcon({ 
+                className: 'poi-icon', 
+                html: name.substring(0, 1).toUpperCase(), 
+                iconSize: [30, 30], 
+                iconAnchor: [15, 30] 
+            });
+
+            L.marker(latlng, { icon: customIcon })
+             .addTo(map)
+             .bindPopup(`<b>POI: ${name}</b><br>${address}`);
+        }
+
+        // --- 5. Atualizar a Lista de POIs na Sidebar ---
+        function updatePOIList() {
+            const poiListElement = document.getElementById('poiList');
+            const poiCountElement = document.getElementById('poiCount');
+
+            // Limpa a lista atual
+            poiListElement.innerHTML = '';
+
+            if (poiData.length === 0) {
+                 // Exibe o estado vazio se não houver POIs
+                poiListElement.innerHTML = `
+                    <li id="emptyState" class="text-center text-gray-500 italic p-4 bg-white rounded-md">
+                        Nenhum POI adicionado. Clique no mapa para começar!
+                    </li>
+                `;
+            } else {
+                // Percorre os dados e cria os elementos <li>
+                poiData.forEach((poi) => {
+                    const li = document.createElement('li');
+                    li.className = 'flex flex-col p-3 bg-white rounded-lg shadow-sm cursor-pointer hover:bg-gray-100 transition';
+                    li.innerHTML = `
+                        <span class="font-semibold text-gray-800">${poi.name}</span>
+                        <p class="text-sm text-gray-600 mt-0.5 break-words">${poi.address}</p>
+                        <p class="text-xs text-gray-400 mt-1">Lat: ${poi.lat}, Lng: ${poi.lng}</p>
+                    `;
+                    // Adiciona evento de clique para centralizar o mapa no POI
+                    li.onclick = () => map.setView([poi.lat, poi.lng], 15);
+                    poiListElement.appendChild(li);
+                });
+            }
+
+            // Atualiza a contagem
+            poiCountElement.textContent = poiData.length;
+        }
+
+        // Inicia o mapa quando o DOM estiver carregado
+        window.onload = initMap;
+    </script>
+</body>
+</html>
