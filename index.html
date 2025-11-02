@@ -12,7 +12,7 @@
             theme: {
                 extend: {
                     colors: {
-                        'user': '#1F75FE', // Azul para o usu·rio
+                        'user': '#1F75FE', // Azul para o usu√°rio
                         'poi': '#FFC300',  // Amarelo para POIs
                         'background': '#f8fafc',
                     }
@@ -33,7 +33,7 @@
         .full-page-container { min-height: 100vh; }
         .leaflet-container { font-family: 'Inter', sans-serif; }
 
-        /* Estilo para Ìcone de POI personalizado */
+        /* Estilo para √≠cone de POI personalizado */
         .poi-icon {
             background-color: #FFC300;
             color: #333;
@@ -47,7 +47,7 @@
             font-size: 14px;
             box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
         }
-        /* Estilo para Ìcone de localizaÁ„o do usu·rio */
+        /* Estilo para √≠cone de localiza√ß√£o do usu√°rio */
         .user-icon {
             background-color: #1F75FE;
             color: white;
@@ -67,14 +67,14 @@
     <!-- Container Principal Responsivo -->
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl p-4 sm:p-6 my-4">
         <h1 class="text-3xl font-bold text-gray-800 mb-2 text-center"> Localizador e POI Manager</h1>
-        <p class="text-center text-gray-600 mb-6">Encontre sua posiÁ„o e adicione Pontos de Interesse (POIs) com endereÁo completo.</p>
+        <p class="text-center text-gray-600 mb-6">Encontre sua posi√ß√£o e adicione Pontos de Interesse (POIs) com endere√ßo completo.</p>
 
         <!-- Container do Mapa e da Lista -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
-            <!-- ¡rea do Mapa -->
+            <!-- √Årea do Mapa -->
             <div id="map" class="lg:col-span-2 shadow-inner order-1">
-                <!-- O mapa ser· injetado aqui pelo Leaflet -->
+                <!-- O mapa ser√° injetado aqui pelo Leaflet -->
             </div>
 
             <!-- Painel de POIs e Status -->
@@ -84,20 +84,20 @@
                     <span id="poiCount" class="bg-poi text-white text-xs font-bold px-2 py-1 rounded-full">0</span>
                 </h2>
                 
-                <!-- Status da GeolocalizaÁ„o do Usu·rio -->
+                <!-- Status da Geolocaliza√ß√£o do Usu√°rio -->
                 <div id="userStatus" class="p-3 mb-4 rounded-lg bg-blue-100 border border-user/50 text-user">
                     <p class="font-bold flex items-center">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                        LocalizaÁ„o:
+                        Localiza√ß√£o:
                     </p>
-                    <p id="userAddress" class="text-sm mt-1 text-gray-700">Buscando sua posiÁ„o e endereÁo...</p>
+                    <p id="userAddress" class="text-sm mt-1 text-gray-700">Buscando sua posi√ß√£o e endere√ßo...</p>
                     <p id="userCoords" class="text-xs text-gray-500 mt-1"></p>
                 </div>
 
                 <!-- Lista de POIs (Vazia inicialmente) -->
                 <ul id="poiList" class="space-y-2 max-h-64 overflow-y-auto">
                     <li id="emptyState" class="text-center text-gray-500 italic p-4 bg-white rounded-md">
-                        Nenhum POI adicionado. Clique no mapa para comeÁar!
+                        Nenhum POI adicionado. Clique no mapa para come√ßar!
                     </li>
                 </ul>
             </div>
@@ -108,35 +108,35 @@
     <script>
         let map;
         let poiData = []; // Array para armazenar os dados dos POIs
-        let userMarker = null; // Marcador para a localizaÁ„o do usu·rio
+        let userMarker = null; // Marcador para a localiza√ß√£o do usu√°rio
 
-        // Õcones personalizados
+        // √çcones personalizados
         const POI_ICON = L.divIcon({ className: 'poi-icon', html: 'P', iconSize: [30, 30], iconAnchor: [15, 30] });
         const USER_ICON = L.divIcon({ className: 'user-icon', html: '', iconSize: [35, 35], iconAnchor: [17, 35] });
 
-        // --- 1. InicializaÁ„o do Mapa e GeolocalizaÁ„o ---
+        // --- 1. Inicializa√ß√£o do Mapa e Geolocaliza√ß√£o ---
         function initMap() {
-            // Inicializa o mapa com um centro padr„o (mundo) e um nÌvel de zoom baixo
+            // Inicializa o mapa com um centro padr√£o (mundo) e um n√≠vel de zoom baixo
             map = L.map('map').setView([0, 0], 2); 
 
             // Adiciona a camada do OpenStreetMap
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
-                attribution: '© OpenStreetMap contributors'
+                attribution: '¬© OpenStreetMap contributors'
             }).addTo(map);
 
             // Adiciona o listener de clique para adicionar POIs
             map.on('click', handleMapClick);
 
-            // Tenta localizar o usu·rio
+            // Tenta localizar o usu√°rio
             locateUser();
         }
 
         /**
-         * Realiza geocodificaÁ„o reversa para obter o endereÁo a partir das coordenadas (Nominatim).
+         * Realiza geocodifica√ß√£o reversa para obter o endere√ßo a partir das coordenadas (Nominatim).
          * @param {number} lat - Latitude.
          * @param {number} lng - Longitude.
-         * @returns {Promise<string>} O endereÁo formatado ou uma mensagem de erro.
+         * @returns {Promise<string>} O endere√ßo formatado ou uma mensagem de erro.
          */
         async function reverseGeocode(lat, lng) {
             const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`;
@@ -144,7 +144,7 @@
             try {
                 const response = await fetch(url, {
                     headers: {
-                        // … uma boa pr·tica definir um User-Agent para a API Nominatim
+                        // √â uma boa pr√°tica definir um User-Agent para a API Nominatim
                         'User-Agent': 'POI-Manager-App/1.0 (onivaldo.miquelino@example.com)'
                     }
                 });
@@ -153,73 +153,73 @@
                 if (data.display_name) {
                     return data.display_name;
                 } else {
-                    return "EndereÁo n„o encontrado.";
+                    return "Endere√ßo n√£o encontrado.";
                 }
 
             } catch (error) {
-                console.error("Erro na geocodificaÁ„o reversa:", error);
-                return "Erro ao buscar endereÁo.";
+                console.error("Erro na geocodifica√ß√£o reversa:", error);
+                return "Erro ao buscar endere√ßo.";
             }
         }
 
-        // --- 2. LocalizaÁ„o do Usu·rio (Geolocation API) ---
+        // --- 2. Localiza√ß√£o do Usu√°rio (Geolocation API) ---
         function locateUser() {
             const userCoordsElement = document.getElementById('userCoords');
             const userAddressElement = document.getElementById('userAddress');
             const userStatusElement = document.getElementById('userStatus');
 
             if (!navigator.geolocation) {
-                userAddressElement.textContent = 'GeolocalizaÁ„o n„o È suportada pelo seu navegador.';
+                userAddressElement.textContent = 'Geolocaliza√ß√£o n√£o √© suportada pelo seu navegador.';
                 userStatusElement.classList.replace('bg-blue-100', 'bg-red-100');
                 userStatusElement.classList.replace('text-user', 'text-red-600');
                 return;
             }
 
-            // Inicia o processo de localizaÁ„o
+            // Inicia o processo de localiza√ß√£o
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
                     const lat = position.coords.latitude;
                     const lng = position.coords.longitude;
                     const latlng = [lat, lng];
 
-                    // Busca o endereÁo de forma assÌncrona
-                    userAddressElement.textContent = 'EndereÁo: Buscando...';
+                    // Busca o endere√ßo de forma ass√≠ncrona
+                    userAddressElement.textContent = 'Endere√ßo: Buscando...';
                     const address = await reverseGeocode(lat, lng);
 
-                    // Centraliza o mapa na posiÁ„o do usu·rio com zoom 13
+                    // Centraliza o mapa na posi√ß√£o do usu√°rio com zoom 13
                     map.setView(latlng, 13);
                     
-                    // Adiciona/Atualiza o marcador do usu·rio
+                    // Adiciona/Atualiza o marcador do usu√°rio
                     if (!userMarker) {
                         userMarker = L.marker(latlng, { icon: USER_ICON, draggable: false })
                                         .addTo(map)
-                                        .bindPopup(`<b>Sua PosiÁ„o Atual</b><br>${address}`)
+                                        .bindPopup(`<b>Sua Posi√ß√£o Atual</b><br>${address}`)
                                         .openPopup();
                     } else {
                         userMarker.setLatLng(latlng);
-                        userMarker.setPopupContent(`<b>Sua PosiÁ„o Atual</b><br>${address}`).openPopup();
+                        userMarker.setPopupContent(`<b>Sua Posi√ß√£o Atual</b><br>${address}`).openPopup();
                     }
 
                     // Atualiza o status na interface
-                    userAddressElement.textContent = `EndereÁo: ${address}`;
+                    userAddressElement.textContent = `Endere√ßo: ${address}`;
                     userCoordsElement.textContent = `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`;
                     userStatusElement.classList.replace('bg-blue-100', 'bg-green-100');
                     userStatusElement.classList.replace('text-user', 'text-green-600');
                 },
                 (error) => {
-                    // Trata erros de localizaÁ„o
-                    let errorMsg = 'Falha ao obter localizaÁ„o.';
+                    // Trata erros de localiza√ß√£o
+                    let errorMsg = 'Falha ao obter localiza√ß√£o.';
                     if (error.code === 1) {
-                         errorMsg = 'Acesso ‡ localizaÁ„o negado pelo usu·rio.';
+                         errorMsg = 'Acesso √† localiza√ß√£o negado pelo usu√°rio.';
                     }
-                    userAddressElement.textContent = `EndereÁo: ${errorMsg}`;
+                    userAddressElement.textContent = `Endere√ßo: ${errorMsg}`;
                     userCoordsElement.textContent = '';
                     userStatusElement.classList.replace('bg-blue-100', 'bg-red-100');
                     userStatusElement.classList.replace('text-user', 'text-red-600');
-                    // Define uma visualizaÁ„o global caso n„o encontre o usu·rio
+                    // Define uma visualiza√ß√£o global caso n√£o encontre o usu√°rio
                     map.setView([-14.235, -51.925], 4);
                 },
-                { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 } // OpÁıes de GeolocalizaÁ„o
+                { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 } // Op√ß√µes de Geolocaliza√ß√£o
             );
         }
 
@@ -233,16 +233,16 @@
                 const lng = e.latlng.lng;
                 
                 // Exibe feedback de busca
-                const tempAddress = 'Buscando endereÁo...';
+                const tempAddress = 'Buscando endere√ßo...';
 
                 // Adiciona o POI ao mapa
                 addPOIMarker(poiName.trim(), e.latlng, tempAddress);
                 
-                // Busca o endereÁo de forma assÌncrona
+                // Busca o endere√ßo de forma ass√≠ncrona
                 const address = await reverseGeocode(lat, lng);
                 
                 // Atualiza o popup do marcador
-                // (Assumindo que o ˙ltimo marcador adicionado È o que precisamos atualizar)
+                // (Assumindo que o √∫ltimo marcador adicionado √© o que precisamos atualizar)
                 const markers = map._layers;
                 let lastMarker = null;
                 for (const i in markers) {
@@ -254,27 +254,27 @@
                      lastMarker.setPopupContent(`<b>POI: ${poiName.trim()}</b><br>${address}`).openPopup();
                 }
 
-                // Adiciona o POI ‡ lista de dados
+                // Adiciona o POI √† lista de dados
                 poiData.push({ 
                     name: poiName.trim(), 
                     lat: lat.toFixed(4), 
                     lng: lng.toFixed(4),
-                    address: address // Armazena o endereÁo completo
+                    address: address // Armazena o endere√ßo completo
                 });
 
                 // Atualiza a lista na interface
                 updatePOIList();
 
             } else if (poiName !== null) {
-                // Se o usu·rio clicou em OK mas deixou em branco
-                // SubstituÌdo por modal/mensagem em produÁ„o, mas usando alert aqui por simplicidade
-                // alert("O nome do POI n„o pode ser vazio."); 
+                // Se o usu√°rio clicou em OK mas deixou em branco
+                // Substitu√≠do por modal/mensagem em produ√ß√£o, mas usando alert aqui por simplicidade
+                // alert("O nome do POI n√£o pode ser vazio."); 
             }
         }
 
         // --- 4. Adicionar Marcador de POI no Mapa ---
         function addPOIMarker(name, latlng, address) {
-            // Cria um Ìcone customizado com o primeiro caractere do nome
+            // Cria um √≠cone customizado com o primeiro caractere do nome
             const customIcon = L.divIcon({ 
                 className: 'poi-icon', 
                 html: name.substring(0, 1).toUpperCase(), 
@@ -296,10 +296,10 @@
             poiListElement.innerHTML = '';
 
             if (poiData.length === 0) {
-                 // Exibe o estado vazio se n„o houver POIs
+                 // Exibe o estado vazio se n√£o houver POIs
                 poiListElement.innerHTML = `
                     <li id="emptyState" class="text-center text-gray-500 italic p-4 bg-white rounded-md">
-                        Nenhum POI adicionado. Clique no mapa para comeÁar!
+                        Nenhum POI adicionado. Clique no mapa para come√ßar!
                     </li>
                 `;
             } else {
